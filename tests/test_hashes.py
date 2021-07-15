@@ -1,4 +1,4 @@
-from enzoic_client.utilities.hashing import Hashing
+from src.utilities.hashing import Hashing
 
 
 class TestEnzoic:

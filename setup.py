@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='enzoic',
-    version='1.14',
+    version='1.16',
     author="Jeffrey Kasser",
     author_email="jeff@enzoic.com",
     description="Python Client for Enzoic",
@@ -18,6 +18,7 @@ setuptools.setup(
         'pytest',
         'whirlpool',
         'passlib',
+        'bcrypt',
         'argon2-cffi==20.1.0'
     ],
     classifiers=[

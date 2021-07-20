@@ -1,7 +1,7 @@
 import pytest
 import os
-from src.enzoic import Enzoic
-from src.enums.password_types import PasswordType
+from enzoic.enzoic import Enzoic
+from enzoic.enums.password_types import PasswordType
 
 
 @pytest.fixture

@@ -7,7 +7,7 @@ import zlib
 import passlib.hash
 import whirlpool
 import binascii
-from src.enums.password_types import PasswordType
+from enzoic.enums.password_types import PasswordType
 
 
 class Hashing:

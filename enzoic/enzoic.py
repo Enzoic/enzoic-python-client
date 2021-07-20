@@ -1,6 +1,6 @@
 import base64
-from src.utilities.hashing import Hashing
-from src.enums.password_types import PasswordType
+from enzoic.utilities.hashing import Hashing
+from enzoic.enums.password_types import PasswordType
 from typing import Tuple, Union
 from datetime import datetime
 import requests

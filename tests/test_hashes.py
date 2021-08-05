@@ -131,13 +131,13 @@ class TestEnzoic:
         assert '$6$52450745$k5ka2p8bFuSmoVT1tzOyyuaREkkKBcCNqoDKzYiJL9RaE8yMnPgh2XzzF0NDrUhgrcLwg78xs1w5pJiypEdFX/' \
                == Hashing.calc_sha512crypt_hash('hashcat', '$6$52450745')
 
-
-class TestCalcArgon2:
-
     def test_custom_algorithm_10_hash(self):
         assert 'bd17b9d14010a1d4f8c8077f1be1e20b9364d9979bbcf8591337e952cc6037026aa4a2025543d39169022344b4dd1d20f499395533e35705296034bbf7e7d663' \
                == Hashing.calc_custom_algorithm_10_hash(
             'chatbooks', 'NqXCvAHUpAWAco3hVTG5Sg0FfmJRQPKi0LvcHwylzXHhSNuWwvYdMSSGzswi0ZdJ')
+
+
+class TestCalcArgon2:
 
     def test_argon2_hash_1(self):
         assert '$argon2d$v=19$m=1024,t=3,p=2$c2FsdHlzYWx0$EklGIPtCSWb3IS+q4IQ7rwrwm2o' \

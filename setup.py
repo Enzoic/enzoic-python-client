@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='enzoic',
-    version='1.21',
+    version='1.22',
     author="Jeffrey Kasser",
     author_email="jeff@enzoic.com",
     description="Python Client for Enzoic",

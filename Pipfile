@@ -9,7 +9,6 @@ verify_ssl = true
 argon2-cffi = "*"
 bcrypt = "*"
 zipp = "*"
-Whirlpool = "*"
 passlib = "*"
 pytest = "*"
 requests = "*"

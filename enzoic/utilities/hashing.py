@@ -5,7 +5,6 @@ import argon2
 import bcrypt
 import zlib
 import passlib.hash
-import whirlpool
 import binascii
 from enzoic.enums.password_types import PasswordType
 
@@ -79,7 +78,9 @@ class Hashing:
         to_sha = password + salt
         # make these byte objects
         sha512_out = hashlib.sha512(to_sha.encode('utf-8')).digest()
-        whirlpool_out = whirlpool.new(to_whirlpool.encode('utf-8')).digest()
+        whirlpool_out = hashlib.new('whirlpool')
+        whirlpool_out.update(to_whirlpool.encode('utf-8'))
+        whirlpool_out = whirlpool_out.digest()
         # xor byte objects
         hashed_pw = bytes(a ^ b for (a, b) in zip(sha512_out, whirlpool_out))
         return hashed_pw.hex()

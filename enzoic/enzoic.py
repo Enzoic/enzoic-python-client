@@ -1,6 +1,7 @@
 import base64
 from enzoic.utilities.hashing import Hashing
 from enzoic.enums.password_types import PasswordType
+from urllib.parse import urlencode, quote_plus
 from typing import Tuple, Union
 from datetime import datetime
 import requests
@@ -112,8 +113,11 @@ class Enzoic:
         types.
         :return: True if the credentials are known to be compromised, otherwise False.
         """
-        response = self._make_rest_call(self.api_base_url + self.ACCOUNTS_API_PATH + '?username=' + username, 'GET',
-                                        None)
+        # username needs to be converted to lowercase and url encoded
+        params = {"username": str(username).lower()}
+        result = urlencode(params, quote_via=quote_plus)
+
+        response = self._make_rest_call(self.api_base_url + self.ACCOUNTS_API_PATH + f'?{result}', 'GET', None)
         if response == '404':
             # This is all we needed to check for this, 404 means the email wasn't even in the database
             return False

@@ -18,6 +18,8 @@ API Overview
 Here's the API in a nutshell.
     
     # Create a new instance of the Enzoic class - this is our primary interface for making API calls
+    from enzoic import Enzoic
+
     enzoic = Enzoic('YOUR_API_KEY', 'YOUR_API_SECRET')
     
     # Check whether a password has been compromised

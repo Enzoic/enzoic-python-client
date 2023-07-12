@@ -1,6 +1,6 @@
 import pytest
 import os
-from enzoic.enzoic import Enzoic
+from enzoic import Enzoic
 from enzoic.enums.password_types import PasswordType
 
 

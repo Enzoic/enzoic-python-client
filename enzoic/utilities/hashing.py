@@ -7,34 +7,34 @@ import zlib
 import passlib.hash
 import binascii
 from enzoic.enums.password_types import PasswordType
+from enzoic.exceptions import UnsupportedPasswordType
 
 
 class Hashing:
-
     @staticmethod
     def base_64_decode(base64_string):
-        return base64.b64decode(base64_string + '=' * (-len(base64_string) % 4))
+        return base64.b64decode(base64_string + "=" * (-len(base64_string) % 4))
 
     @staticmethod
     def calc_sha256_unsalted_hash(password: str) -> hex:
-        hashed_pw = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.sha256(password.encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
     def calc_sha1_unsalted_hash(password: str) -> hex:
-        hashed_pw = hashlib.sha1(password.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.sha1(password.encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
     def calc_md5_unsalted_hash(password: str) -> hex:
-        hashed_pw = hashlib.md5(password.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.md5(password.encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
     def calc_ipboard_mybb_hash(password: str, salt: str) -> hex:
-        md5_salt = hashlib.md5(salt.encode('utf-8')).hexdigest()
-        md5_pw = hashlib.md5(password.encode('utf-8')).hexdigest()
-        hashed_pw = hashlib.md5((md5_salt + md5_pw).encode('utf-8')).hexdigest()
+        md5_salt = hashlib.md5(salt.encode("utf-8")).hexdigest()
+        md5_pw = hashlib.md5(password.encode("utf-8")).hexdigest()
+        hashed_pw = hashlib.md5((md5_salt + md5_pw).encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
@@ -44,7 +44,9 @@ class Hashing:
 
     @staticmethod
     def calc_vbulletin_pre_3_8_5_hash(password: str, salt: str) -> hex:
-        hashed_pw = hashlib.md5((hashlib.md5(password.encode('utf-8')).hexdigest() + salt).encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.md5(
+            (hashlib.md5(password.encode("utf-8")).hexdigest() + salt).encode("utf-8")
+        ).hexdigest()
         return hashed_pw
 
     @staticmethod
@@ -53,23 +55,26 @@ class Hashing:
 
     @staticmethod
     def calc_bcrypt_hash(password: str, salt: str) -> bcrypt:
-        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), salt.encode('utf-8'))
+        hashed_pw = bcrypt.hashpw(password.encode("utf-8"), salt.encode("utf-8"))
         return hashed_pw.decode()
 
     @staticmethod
     def calc_crc32_hash(password: str) -> hex:
-        hashed_pw = zlib.crc32(password.encode('utf-8'))
+        hashed_pw = zlib.crc32(password.encode("utf-8"))
         return str(hashed_pw)
 
     @staticmethod
     def calc_phpbb3_hash(password: str, salt: str) -> hex:
-        hashed_pw = passlib.hash.phpass.genhash(password, salt)
+        try:
+            hashed_pw = passlib.hash.phpass.using(salt=salt).hash(password)
+        except ValueError:
+            return None
         return hashed_pw
 
     @staticmethod
     def calc_scrypt_hash(password: str, salt: str):
-        """ Not currently in use"""
-        hashed_pw = passlib.hash.scrypt.using(salt=salt.encode('utf-8')).hash(password)
+        """Not currently in use"""
+        hashed_pw = passlib.hash.scrypt.using(salt=salt.encode("utf-8")).hash(password)
         return hashed_pw
 
     @staticmethod
@@ -77,9 +82,9 @@ class Hashing:
         to_whirlpool = salt + password
         to_sha = password + salt
         # make these byte objects
-        sha512_out = hashlib.sha512(to_sha.encode('utf-8')).digest()
-        whirlpool_out = hashlib.new('whirlpool')
-        whirlpool_out.update(to_whirlpool.encode('utf-8'))
+        sha512_out = hashlib.sha512(to_sha.encode("utf-8")).digest()
+        whirlpool_out = hashlib.new("whirlpool")
+        whirlpool_out.update(to_whirlpool.encode("utf-8"))
         whirlpool_out = whirlpool_out.digest()
         # xor byte objects
         hashed_pw = bytes(a ^ b for (a, b) in zip(sha512_out, whirlpool_out))
@@ -87,17 +92,17 @@ class Hashing:
 
     @staticmethod
     def calc_custom_algorithm_2_hash(password: str, salt: str) -> hex:
-        hashed_pw = hashlib.md5(f'{password}{salt}'.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.md5(f"{password}{salt}".encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
     def calc_sha512_unsalted_hash(password: str) -> hex:
-        hashed_pw = hashlib.sha512(password.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.sha512(password.encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
     def calc_custom_algorithm_3_hash(password: str, salt="kikugalanet") -> hex:
-        hashed_pw = hashlib.md5(f'{salt}{password}'.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.md5(f"{salt}{password}".encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
@@ -107,19 +112,19 @@ class Hashing:
 
     @staticmethod
     def calc_custom_algorithm_4_hash(password: str, salt: str) -> bcrypt:
-        md5_value = hashlib.md5(password.encode('utf-8')).hexdigest()
-        hashed_pw = bcrypt.hashpw(md5_value.encode('utf-8'), salt.encode('utf-8'))
+        md5_value = hashlib.md5(password.encode("utf-8")).hexdigest()
+        hashed_pw = bcrypt.hashpw(md5_value.encode("utf-8"), salt.encode("utf-8"))
         return hashed_pw.decode()
 
     @staticmethod
     def calc_custom_algorithm_5_hash(password: str, salt: str) -> hex:
-        md5_value = hashlib.md5(f'{password}{salt}'.encode('utf-8')).hexdigest()
-        hashed_pw = hashlib.sha256(md5_value.encode('utf-8')).hexdigest()
+        md5_value = hashlib.md5(f"{password}{salt}".encode("utf-8")).hexdigest()
+        hashed_pw = hashlib.sha256(md5_value.encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
     def calc_oscommerce_aef_hash(password: str, salt: str) -> hex:
-        hashed_pw = hashlib.md5(f'{salt}{password}'.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.md5(f"{salt}{password}".encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
@@ -139,19 +144,19 @@ class Hashing:
 
     @staticmethod
     def calc_peoplesoft_hash(password: str) -> hex:
-        sha1_hash = hashlib.sha1(password.encode('utf-16-le')).digest()
+        sha1_hash = hashlib.sha1(password.encode("utf-16-le")).digest()
         hashed_pw = base64.b64encode(sha1_hash).decode()
         return hashed_pw
 
     @staticmethod
     def calc_punbb_hash(password: str, salt: str) -> hex:
         sha1_hash = hashlib.sha1(password.encode("utf-8")).hexdigest()
-        hashed_pw = hashlib.sha1(f'{salt}{sha1_hash}'.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.sha1(f"{salt}{sha1_hash}".encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
     def calc_sha1_salted_hash(password: str, salt: str) -> hex:
-        hashed_pw = hashlib.sha1(f'{password}{salt}'.encode('utf-8')).hexdigest()
+        hashed_pw = hashlib.sha1(f"{password}{salt}".encode("utf-8")).hexdigest()
         return hashed_pw
 
     @staticmethod
@@ -166,7 +171,9 @@ class Hashing:
 
     @staticmethod
     def calc_ave_datalife_diferior_hash(password: str) -> hex:
-        hashed_pw = Hashing.calc_md5_unsalted_hash(Hashing.calc_md5_unsalted_hash(password))
+        hashed_pw = Hashing.calc_md5_unsalted_hash(
+            Hashing.calc_md5_unsalted_hash(password)
+        )
         return hashed_pw
 
     @staticmethod
@@ -176,7 +183,9 @@ class Hashing:
 
     @staticmethod
     def calc_django_sha1_hash(password: str, salt: str) -> hex:
-        hashed_pw = f'sha1${salt}${Hashing.calc_sha1_unsalted_hash(f"{salt}{password}")}'
+        hashed_pw = (
+            f'sha1${salt}${Hashing.calc_sha1_unsalted_hash(f"{salt}{password}")}'
+        )
         return hashed_pw
 
     @staticmethod
@@ -186,28 +195,28 @@ class Hashing:
 
     @staticmethod
     def calc_run_cms_smf1_1(password: str, salt: str) -> hex:
-        hashed_pw = Hashing.calc_sha1_unsalted_hash(f'{salt}{password}')
+        hashed_pw = Hashing.calc_sha1_unsalted_hash(f"{salt}{password}")
         return hashed_pw
 
     @staticmethod
     def calc_ntlm_hash(password: str) -> hex:
-        hashed_pw = hashlib.new('md4', password.encode('utf-16le')).digest()
-        return binascii.hexlify(hashed_pw).decode('utf-8')
+        hashed_pw = hashlib.new("md4", password.encode("utf-16le")).digest()
+        return binascii.hexlify(hashed_pw).decode("utf-8")
 
     @staticmethod
     def calc_sha1dash_hash(password: str, salt: str) -> hex:
-        return Hashing.calc_sha1_unsalted_hash(f'--{salt}--{password}--')
+        return Hashing.calc_sha1_unsalted_hash(f"--{salt}--{password}--")
 
     @staticmethod
     def calc_sha384_hash(password: str) -> hex:
-        return hashlib.sha384(password.encode('utf-8')).hexdigest()
+        return hashlib.sha384(password.encode("utf-8")).hexdigest()
 
     @staticmethod
     def calc_custom_algorithm_7_hash(password: str, salt: str) -> hex:
         # This key is hardcoded and specific to this algorithm
-        byte_key = b'd2e1a4c569e7018cc142e9cce755a964bd9b193d2d31f02d80bb589c959afd7e'
+        byte_key = b"d2e1a4c569e7018cc142e9cce755a964bd9b193d2d31f02d80bb589c959afd7e"
         derived_salt = Hashing.calc_sha1_unsalted_hash(salt)
-        msg = derived_salt.encode('utf-8') + password.encode('utf-8')
+        msg = derived_salt.encode("utf-8") + password.encode("utf-8")
         hashed = hmac.new(byte_key, msg, digestmod=hashlib.sha256)
         return hashed.hexdigest()
 
@@ -224,15 +233,17 @@ class Hashing:
 
     @staticmethod
     def calc_sha512crypt_hash(password: str, salt: str) -> hex:
-        return passlib.hash.sha512_crypt.encrypt(password, salt=salt[3:], rounds=5000, relaxed=True)
+        return passlib.hash.sha512_crypt.encrypt(
+            password, salt=salt[3:], rounds=5000, relaxed=True
+        )
 
     @staticmethod
     def calc_custom_algorithm_10_hash(password: str, salt: str) -> hex:
-        return Hashing.calc_sha512_unsalted_hash(password + ':' + salt)
+        return Hashing.calc_sha512_unsalted_hash(password + ":" + salt)
 
     @staticmethod
     def calc_argon_2_hash(password, salt):
-        """ Use this for the tests. For calling the api with partial hashes use the calc_argon_2_raw_hash """
+        """Use this for the tests. For calling the api with partial hashes use the calc_argon_2_raw_hash"""
         argon_type = argon2.Type.D
         iterations = 3
         memory_cost = 1024
@@ -242,39 +253,39 @@ class Hashing:
 
         # Encode if this comes in as a str
         if type(password) == str:
-            password = password.encode('utf-8')
+            password = password.encode("utf-8")
 
         # Check if salt has encoded settings
-        if salt.startswith('$argon2'):
+        if salt.startswith("$argon2"):
             # settings are encoded, use them
-            if salt.startswith('$argon2i'):
+            if salt.startswith("$argon2i"):
                 argon_type = argon2.Type.I
 
-            salt_components = salt.split('$')
+            salt_components = salt.split("$")
             if len(salt_components) == 5:
                 # maker sure b64 encoded salt length is a multiple of 4
                 # just_salt = base64.b64decode(salt_components[4] + '=' * (-len(salt_components[4]) % 4)).decode()
                 just_salt = Hashing.base_64_decode(salt_components[4]).decode()
                 # loop through and calculate the new params
-                salt_params = salt_components[3].split(',')
+                salt_params = salt_components[3].split(",")
                 for param in salt_params:
-                    param = param.split('=')
-                    if param[0] == 't':
+                    param = param.split("=")
+                    if param[0] == "t":
                         try:
                             iterations = int(param[1])
                         except:
                             iterations = 3
-                    elif param[0] == 'm':
+                    elif param[0] == "m":
                         try:
                             memory_cost = int(param[1])
                         except:
                             memory_cost = 1024
-                    elif param[0] == 'p':
+                    elif param[0] == "p":
                         try:
                             parallelism = int(param[1])
                         except:
                             parallelism = 2
-                    elif param[0] == 'l':
+                    elif param[0] == "l":
                         try:
                             hash_length = int(param[1])
                         except:
@@ -282,21 +293,30 @@ class Hashing:
 
         # calculate the hash
         argon2_hash = argon2.hash_password(
-            password, salt=just_salt.encode('utf-8'), time_cost=iterations, memory_cost=memory_cost,
-            parallelism=parallelism, hash_len=hash_length, type=argon_type
+            password,
+            salt=just_salt.encode("utf-8"),
+            time_cost=iterations,
+            memory_cost=memory_cost,
+            parallelism=parallelism,
+            hash_len=hash_length,
+            type=argon_type,
         )
         return argon2_hash.decode()
 
     @staticmethod
-    def _calc_credential_hash(username, password, argon2_salt, hash_type, password_salt):
-        password_hash = Hashing.calculate_password_hash(password_to_hash=password, salt=password_salt,
-                                                        hash_type=hash_type)
+    def _calc_credential_hash(
+        username, password, argon2_salt, hash_type, password_salt
+    ):
+        password_hash = Hashing.calculate_password_hash(
+            password_to_hash=password, salt=password_salt, hash_type=hash_type
+        )
 
         if password_hash is not None:
+            argon2_hash = Hashing.calc_argon_2_hash(
+                f"{username}${password_hash}", argon2_salt
+            )
 
-            argon2_hash = Hashing.calc_argon_2_hash(f'{username}${password_hash}', argon2_salt)
-
-            just_hash = argon2_hash.split('$')[-1]
+            just_hash = argon2_hash.split("$")[-1]
 
             return Hashing.base_64_decode(just_hash).hex()
         else:
@@ -304,7 +324,7 @@ class Hashing:
 
     @staticmethod
     def calculate_password_hash(hash_type: int, password_to_hash: str, salt=""):
-        """ Pass in a hashtype int and calculate the required password hash"""
+        """Pass in a hashtype int and calculate the required password hash"""
         if hash_type == PasswordType.MD5_UNSALTED:
             return Hashing.calc_md5_unsalted_hash(password_to_hash)
 
@@ -342,7 +362,7 @@ class Hashing:
         # as well as there not being any set standard way to compute it
         elif hash_type == PasswordType.SCrypt:
             return Hashing.calc_scrypt_hash(password_to_hash, salt)
-            
+
         elif hash_type == PasswordType.CustomAlgorithm2:
             return Hashing.calc_custom_algorithm_2_hash(password_to_hash, salt)
 
@@ -428,4 +448,16 @@ class Hashing:
             return Hashing.calc_custom_algorithm_10_hash(password_to_hash, salt)
 
         else:
-            raise Exception('Unsupported PasswordType in calculate_password_hash')
+            raise UnsupportedPasswordType
+
+
+if __name__ == "__main__":
+    from enzoic.enzoic import Enzoic
+
+    enz = Enzoic(
+        api_key="90a4a6bfeb7a404d8ef182629e232da4",
+        api_secret="-P=yeYB5QwT1E5-FE3R6whdUC@r4EPQd",
+    )
+    pw = "test@passwordping.com"
+    salt = "123456"
+    Hashing.calc_phpbb3_hash(password=pw, salt=salt)

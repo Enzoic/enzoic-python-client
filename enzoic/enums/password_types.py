@@ -1,4 +1,7 @@
-class PasswordType:
+from enum import Enum
+
+
+class PasswordType(Enum):
     PLAINTEXT = 0
     MD5_UNSALTED = 1
     SHA1_UNSALTED = 2

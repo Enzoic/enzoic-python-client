@@ -1,24 +1,21 @@
-argon2-cffi==20.1.0
-atomicwrites==1.4.0
-attrs==21.2.0
-bcrypt==3.2.0
-certifi==2021.5.30
-cffi==1.14.6
-charset-normalizer==2.0.1
-colorama==0.4.4
-idna==3.2
-importlib-metadata==4.6.1
-iniconfig==1.1.1
-packaging==21.0
+-i https://pypi.org/simple
+argon2-cffi==21.3.0
+argon2-cffi-bindings==21.2.0 ; python_version >= '3.6'
+bcrypt==4.0.1
+certifi==2023.5.7 ; python_version >= '3.6'
+cffi==1.15.1
+charset-normalizer==3.2.0 ; python_full_version >= '3.7.0'
+colorama==0.4.6 ; sys_platform == 'win32'
+exceptiongroup==1.1.2 ; python_version < '3.11'
+idna==3.4 ; python_version >= '3.5'
+iniconfig==2.0.0 ; python_version >= '3.7'
+packaging==23.1 ; python_version >= '3.7'
 passlib==1.7.4
-pluggy==0.13.1
-py==1.10.0
-pycparser==2.20
-pyparsing==2.4.7
-pytest==6.2.4
-requests==2.26.0
-six==1.16.0
-toml==0.10.2
-typing-extensions==3.10.0.0
-urllib3==1.26.6
-zipp==3.5.0
+pluggy==1.2.0 ; python_version >= '3.7'
+pycparser==2.21
+pytest==7.4.0
+pytest-env==0.8.2
+requests==2.31.0
+tomli==2.0.1 ; python_version < '3.11'
+urllib3==2.0.3 ; python_version >= '3.7'
+zipp==3.16.0

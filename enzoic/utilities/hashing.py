@@ -226,7 +226,7 @@ def calc_custom_algorithm_8_hash(password: str, salt: str) -> hex:
 
 def calc_custom_algorithm_9_hash(password: str, salt: str) -> hex:
     result = calc_sha512_unsalted_hash(password + salt)
-    for x in range(11):
+    for _ in range(11):
         result = calc_sha512_unsalted_hash(result)
     return result
 
@@ -234,7 +234,7 @@ def calc_custom_algorithm_9_hash(password: str, salt: str) -> hex:
 def calc_sha256crypt_hash(password: str, salt: str) -> hex:
     rounds = 5000
     add_back_in = False
-    # extract the amount of rounds and the salt value
+    # extract the number of rounds and the salt value
     if "$rounds=" in salt:
         rounds = int(salt.split("=")[1].split("$")[0])
         salt = re.sub(r"\$rounds=\d{1,}", "", salt)
@@ -251,7 +251,7 @@ def calc_sha256crypt_hash(password: str, salt: str) -> hex:
 def calc_sha512crypt_hash(password: str, salt: str) -> hex:
     rounds = 5000
     add_back_in = False
-    # extract the amount of rounds and the salt value
+    # extract the number of rounds and the salt value
     if "$rounds=" in salt:
         rounds = int(salt.split("=")[1].split("$")[0])
         salt = re.sub(r"\$rounds=\d{1,}", "", salt)
@@ -288,7 +288,7 @@ def calc_argon_2_hash(password, salt):
     just_salt = salt
 
     # Encode if this comes in as a str
-    if type(password) == str:
+    if isinstance(password, str):
         password = password.encode("utf-8")
 
     # Check if salt has encoded settings

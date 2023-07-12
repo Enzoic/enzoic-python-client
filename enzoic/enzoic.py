@@ -1,7 +1,7 @@
 import base64
 import requests
 from enzoic.exceptions import UnexpectedEnzoicAPIError
-from enzoic.utilities.hashing import Hashing
+from enzoic.utilities import hashing
 from enzoic.enums.password_types import PasswordType
 from urllib.parse import urlencode, quote_plus
 from typing import Tuple, Union
@@ -45,9 +45,9 @@ class Enzoic:
         :param password: The plaintext password to be checked
         :return: True if the password is a known, compromised password and should not be used
         """
-        md5 = Hashing.calc_md5_unsalted_hash(password)
-        sha1 = Hashing.calc_sha1_unsalted_hash(password)
-        sha256 = Hashing.calc_sha256_unsalted_hash(password)
+        md5 = hashing.calc_md5_unsalted_hash(password)
+        sha1 = hashing.calc_sha1_unsalted_hash(password)
+        sha256 = hashing.calc_sha256_unsalted_hash(password)
         query_string = (
             f"?partialmd5={md5[:10]}&partial_sha1={sha1[:10]}&sha256={sha256[:10]}"
         )
@@ -83,9 +83,9 @@ class Enzoic:
         relative_exposure_frequency = None
         exposure_count = 0
 
-        md5 = Hashing.calc_md5_unsalted_hash(password)
-        sha1 = Hashing.calc_sha1_unsalted_hash(password)
-        sha256 = Hashing.calc_sha256_unsalted_hash(password)
+        md5 = hashing.calc_md5_unsalted_hash(password)
+        sha1 = hashing.calc_sha1_unsalted_hash(password)
+        sha256 = hashing.calc_sha256_unsalted_hash(password)
         query_string = (
             f"?partialmd5={md5[:10]}&partial_sha1={sha1[:10]}&sha256={sha256[:10]}"
         )
@@ -183,7 +183,7 @@ class Enzoic:
                 if hash_spec["hashType"] == PasswordType.BCrypt:
                     bcrypt_count += 1
 
-                credential_hash = Hashing._calc_credential_hash(
+                credential_hash = hashing._calc_credential_hash(
                     username=username,
                     password=password,
                     argon2_salt=response.json()["salt"],
@@ -204,7 +204,7 @@ class Enzoic:
                 None,
             )
 
-            if creds_response != "404":
+            if creds_response.status_code != 404:
                 # loop through the candidate hashes returned and see if we have a match with the exact hash
                 for candidate in creds_response.json()["candidateHashes"]:
                     if candidate in credential_hashes:

@@ -40,22 +40,16 @@ class TestCheckCredentials:
         assert enzoic.check_credentials("testpwdpng445", "notvalid") is False
 
     def test_ignored_hash_type_is_not_exposed(self, enzoic, password_types):
-        assert (
-            enzoic.check_credentials(
-                "testpwdpng445",
-                "testpwdpng4452",
-                exclude_hash_types=[password_types.VBulletinPost3_8_5],
-            )
-            is False
-        )
+        assert enzoic.check_credentials(
+            "testpwdpng445",
+            "testpwdpng4452",
+            exclude_hash_types=[password_types.VBulletinPost3_8_5],
+        ) is False
 
     def test_last_check_date_on_exposure(self, enzoic):
-        assert (
-            enzoic.check_credentials(
-                "testpwdpng445", "testpwdpng4452", last_check_date=datetime(2018, 3, 1)
-            )
-            is False
-        )
+        assert enzoic.check_credentials(
+            "testpwdpng445", "testpwdpng4452", last_check_date=datetime(2018, 3, 1)
+        ) is False
 
 
 class TestGetExposuresForUser:

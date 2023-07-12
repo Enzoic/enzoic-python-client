@@ -12,6 +12,7 @@ zipp = "*"
 passlib = "*"
 pytest = "*"
 requests = "*"
+pytest-env = "*"
 
 [requires]
 python_version = "3"

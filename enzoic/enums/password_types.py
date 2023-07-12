@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import IntEnum
 
 
-class PasswordType(Enum):
+class PasswordType(IntEnum):
     PLAINTEXT = 0
     MD5_UNSALTED = 1
     SHA1_UNSALTED = 2
@@ -43,5 +43,8 @@ class PasswordType(Enum):
     CustomAlgorithm9 = 38
     SHA512Crypt = 39
     CustomAlgorithm10 = 40
+    HMACSHA1_SaltAsKey = 41
+    AuthMeSHA256 = 42
+    SHA256Crypt = 43
     Unknown = 97
     UnusablePassword = 98

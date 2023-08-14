@@ -3,106 +3,194 @@
 TOC
 -
 This README covers the following topics:
-* Installation
-* API Overview
-* The Enzoic Constructor
-* Running tests
+* [Installation](#installation)
+* [The Enzoic Constructor](#the-enzoic-constructor)
+* [Passwords API Example](#passwords-api-examples)
+* [Credentials API Example](#credentials-api-examples)
+* [Exposure API Examples](#exposure-api-examples)
+* [Breach Monitoring By User API Examples](#breach-monitoring-by-user-api-examples)
+* [Breach Monitoring By Domain API Examples](#breach-monitoring-by-domain-api-examples)
+* [Running tests](#running-tests)
 
-Installation
--
+## Installation
+
 To Install the library using pip, run:
 
-    $ pip install enzoic
+```sh
+$ pip install enzoic
+```
 
-API Overview
--
-Here's the API in a nutshell.
-    
-    # Create a new instance of the Enzoic class - this is our primary interface for making API calls
-    from enzoic import Enzoic
+## The Enzoic Client
 
-    enzoic = Enzoic("YOUR_API_KEY", "YOUR_API_SECRET")
-    
-    # Check whether a password has been compromised
-    if enzoic.check_password("password_to_test"):
-        print("Password is compromised")
-    else:
-        print("Password is not compromised")    
-        
-    # Check whether a specific set of credentials are compromised
-    if enzoic.check_credentials("test@enzoic.com", "password_to_test"):
-        print("Credentials are compromised")
-    else:
-        print("Credentials are not compromised")
-        
-    # Use the optional parameters on the check_credentials call to tweak performance 
-    # by including the date/time of the last check and excluding BCrypt    
-    if enzoic.check_credentials("test@enzoic.com", "password_to_test", last_check_datetime_object, [PasswordType.Bcrypt]):
-        print("Credentials are compromised")
-    else:
-        print("Credentials are not compromised")
-    
-    # Get all exposures for a given user
-    exposures = enzoic.get_exposures_for_user("test@enzoic.com")
-    print(str(exposures["count"] + " exposures found for test@enzoic.com")
-    
-    # Now get the full details for the first exposure returned in the exposures response above
-    details = enzoic.get_exposure_details(exposures["exposures"][0])
-    print("First exposure for test@enzoic.com was " + details["title"])
-    
-More information in reference format can be found below.
-
-The Enzoic Constructor
--
 The standard constructor takes your API key and secret you were issued on Enzoic signup.
 
-    enzoic = Enzoic("YOUR_API_KEY", "YOUR_API_SECRET")
+```python
+enzoic = Enzoic("YOUR_API_KEY", "YOUR_API_SECRET")
+```
     
 If you were instructed to use an alternate API endpoint, you may call the overloaded constructor and pass the base URL
 you were provided.
 
-    enzoic = Enzoic("YOUR_API_KEY", "YOUR_API_SECRET", "https://api-alt.enzoic.com/v1")
+```python
+enzoic = Enzoic("YOUR_API_KEY", "YOUR_API_SECRET", "https://api-alt.enzoic.com/v1")
+```
+## Passwords API Examples
+
+See
+https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/passwords-api
+
+```python
+# Check whether a password has been compromised
+if enzoic.check_password("password_to_test"):
+    print("Password is compromised")
+else:
+    print("Password is not compromised")    
+```
+
+
+## Credentials API Examples
+
+
+See https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/credentials-api
+
+```python
+# Check whether a specific set of credentials are compromised
+if enzoic.check_credentials("test@enzoic.com", "password_to_test"):
+    print("Credentials are compromised")
+else:
+    print("Credentials are not compromised")
     
-ExposuresResponse
--
-The enzoic.get_exposures_for_user method returns the response object below.
-
-        {
-            "count": <int>, # number of items in the exposures array
-            "exposures": <list[str]> # A list of exposure IDs. The IDs can be used with the get_exposure_details call
-            to retrieve additional information on each exposure
-        }
+# Use the optional parameters on the check_credentials call to tweak performance 
+# by including the date/time of the last check and excluding BCrypt    
+if enzoic.check_credentials("test@enzoic.com", "password_to_test", last_check_datetime_object, [PasswordType.Bcrypt]):
+    print("Credentials are compromised")
+else:
+    print("Credentials are not compromised")
+```
     
-ExposureDetails
--
-The enzoic.get_exposure_details method returns the response object below.
+## Exposure API Examples
 
-        {
-            "id": <str>, # The ID of the exposure.
-            "title": <str>, # Title of the exposure, for breaches this is the domain of the origin site.
-            "entries": <int>, # number of credentials found in the exposure.
-            "date": <str>, # Date the exposure occurred as much as it is known. The value is as follows:
-             # - null if the date is not known
-             # - Month and day set to December 31st, if only the year is known (e.g. '2015-12-31' if Exposure date was sometime in 2015)
-             # - Day set to the first of the month if only the month is known (e.g. '2015-06-01' if Exposure date was sometime in June 2015)
-             # - Otherwise, exact date if exact date is known, including time
-            "category": <str>, # A category for the origin website, if the exposure was a data breach.
-            "passwordType": <str>, # The format of the passwords in the Exposure, e.g. 'Cleartext', 'MD5', etc.
-            "exposedData": <list[str]>,  # The types of user data which were present in the Exposure e.g. [ 
-                "Emails",
-                "Passwords"
-            ],
-            "dateAdded": <str>, # The date the Exposure was found and added to the Enzoic database.
-            "sourceURLs": <list[str]>, # A list of URLs the data was found at. Only present for some types of Exposures,
-            like when the source was a paste site.
-            "domainsAffected": <int> The number of unique email address domains in this Exposure. So, for instance, if
-            the Exposure only contained 'gmail.com' and 'yahoo.com' email addresses, this number would be 2.
-        }
+See https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/exposures-api
 
-Running Tests
--
-If you wish to run tests set your PP_API_KEY and PP_API_SECRET in the pytest.ini file and then run `pytest ./tests`
+```python
+# Get all exposures for a given user
+exposures = enzoic.get_exposures_for_user("test@enzoic.com")
+print(str(exposures["count"] + " exposures found for test@enzoic.com")
 
-License
--
+# Now get the full details for the first exposure returned in the exposures response above
+details = enzoic.get_exposure_details(exposures["exposures"][0])
+print("First exposure for test@enzoic.com was " + details["title"])
+
+# Get all exposures for a given domain - a second parameter indicates whether to include exposure details in results
+exposures = enzoic.get_exposures_for_domain('enzoic.com', True, 20, None)
+for exposure in exposures["exposures"]:
+    
+    # print out the first page of results
+    print(f'Exposure {exposure["title"]}')
+    
+# if a pagingToken is present, get the next page of results
+if exposures["pagingToken"] != "":
+    enzoic.get_exposures_for_domain('enzoic.com', True, 20, exposures["pagingToken"])
+    # process the second page of results here
+
+# Get all exposed users for a given domain
+# returns paged results
+# https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/exposures-api/get-exposures-for-all-email-addresses-in-a-domain
+exposures = enzoic.get_exposed_users_for_domain('enzoic.com', 20, None)
+for user in exposures["users"]:
+
+    # print out the first page of results
+    print(f'Exposed User: {user["username"]}')
+    
+# if a pagingToken is present, get the next page of results
+if exposures["pagingToken"] != "":
+    enzoic.get_exposed_users_for_domain('enzoic.com', 20, exposures["pagingToken"])
+    # process the second page of results here
+```
+
+## Breach Monitoring By User API Examples
+
+See https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/breach-monitoring-api/breach-monitoring-by-domain
+
+```python
+# some email addresses you wish to monitor
+usernames = ["eicar_0@enzoic.com", "eicar_1@enzoic.com"]
+
+# subscribe for alerts for the above users
+add_response = enzoic.add_user_alert_subscriptions(username_hashes=usernames)
+print(f'New subscriptions added: {add_response["added"]}')
+print(f'Subscriptions that already existed: {add_response["alreadyExisted"]}')
+
+# delete subscriptions for these users
+delete_response = enzoic.delete_user_alert_subscriptions(username_hashes=usernames)
+print(f'Subscriptions deleted: {delete_response["deleted"]}')
+print(f'Subscriptions not found: {delete_response["notFound"]}')
+
+# check whether a user is already subscribed
+subscribed = enzoic.is_user_subscribed_for_alerts(username_hash=usernames[0])
+if subscribed:
+    print(f"User, {usernames[0]}, is already subscribed!")
+else:
+    print(F"User, {usernames[0]}, is not subscribed!")
+
+# get all users subscribed for alerts on your account
+# this call returns paged results per https://www.enzoic.com/docs-exposure-alerts-service-api/#get-exposure-subscriptions
+# we can leave the page_size and paging_token parameters empty to get the first page of results
+subscriptions_response = enzoic.get_user_alert_subscriptions()
+for subscribed_username_hash in subscriptions_response:
+    print(f"Username Hash: {subscribed_username_hash}")
+
+# if a pagingToken is present in the response, then get the next page of results
+if subscriptions_response["pagingToken"] != "":
+    subscriptions_response = enzoic.get_user_alert_subscriptions(paging_token=subscriptions_response["pagingToken"])
+    # process results here
+```
+
+## Breach Monitoring by Domain API Examples
+
+See https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/breach-monitoring-api/breach-monitoring-by-domain
+
+```python
+# test domains for alert subscriptions
+domains = ["testdomain1.com", "testdomain2.com"]
+
+# subscribe to alerts for these domains
+add_response = enzoic.add_domain_alert_subscriptions(domains=domains)
+print(f'New subscriptions added: {add_response["added"]}')
+print(f'Subscriptions that already existed: {add_response["alreadyExisted"]}')
+
+# delete subscriptions for these domains
+delete_response = enzoic.delete_domain_alert_subscriptions(domains=domains)
+print(f'Subscriptions deleted: {delete_response["deleted"]}')
+print(f'Subscriptions not found: {delete_response["notFound"]}')
+
+# check whether a domain is already subscribed
+subscribed = enzoic.is_domain_subscribed_for_alerts(domain=domains[0])
+if subscribed:
+    print(f"Domain, {domains[0]}, is already subscribed!")
+else:
+    print(F"Domain, {domains[0]}, is not subscribed!")
+
+# get all domains subscribed for alerts on your account
+# this call returns paged results per https://www.enzoic.com/docs-exposure-alerts-service-api/#get-exposure-subscriptions-domains
+# we can leave the page_size and paging_token parameters empty to get the first page of results
+subscriptions_response = enzoic.get_domain_alert_subscriptions()
+for subscribed_domain in subscriptions_response:
+    print(f"Domain: {subscribed_domain}")
+
+# if a pagingToken is present in the response, then get the next page of results
+if subscriptions_response["pagingToken"] != "":
+    subscriptions_response = enzoic.get_domain_alert_subscriptions(paging_token=subscriptions_response["pagingToken"])
+    # process results here
+```
+
+## Running Tests
+
+If you wish to run tests set your PP_API_KEY and PP_API_SECRET in the pytest.ini file and then run 
+```sh
+$ pytest ./tests
+```
+
+## License
+
 This code is free to use under the terms of the MIT license.

@@ -1,6 +1,7 @@
 import pytest
 import os
 from enzoic import Enzoic
+from enzoic import exceptions
 from enzoic.enums.password_types import PasswordType
 
 
@@ -32,11 +33,20 @@ def _get_api_secret():
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def enzoic(_get_api_key, _get_api_secret):
-    yield Enzoic(_get_api_key, _get_api_secret)
-
+    def enzoic(api_key=None, api_secret=None, api_base_url="https://api.enzoic.com/v1"):
+        if api_key is None:
+            api_key = _get_api_key
+        if api_secret is None:
+            api_secret = _get_api_secret
+        return Enzoic(api_key=api_key, api_secret=api_secret)
+    yield enzoic
 
 @pytest.fixture(scope="session")
 def password_types():
     yield PasswordType
+
+@pytest.fixture(scope="session")
+def enzoic_exceptions():
+    yield exceptions

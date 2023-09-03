@@ -328,16 +328,14 @@ def calc_argon_2_hash(password, salt):
                         hash_length = 20
 
     # calculate the hash
-    argon2_hash = argon2.hash_password(
-        password,
-        salt=just_salt.encode("utf-8"),
+    argon2_hash = argon2.PasswordHasher(
         time_cost=iterations,
         memory_cost=memory_cost,
         parallelism=parallelism,
         hash_len=hash_length,
         type=argon_type,
-    )
-    return argon2_hash.decode()
+    ).hash(password=password, salt=just_salt.encode("utf-8"))
+    return argon2_hash
 
 
 def _calc_credential_hash(

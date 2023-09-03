@@ -131,7 +131,7 @@ subscribed = enzoic.is_user_subscribed_for_alerts(username_hash=usernames[0])
 if subscribed:
     print(f"User, {usernames[0]}, is already subscribed!")
 else:
-    print(F"User, {usernames[0]}, is not subscribed!")
+    print(f"User, {usernames[0]}, is not subscribed!")
 
 # get all users subscribed for alerts on your account
 # this call returns paged results per https://www.enzoic.com/docs-exposure-alerts-service-api/#get-exposure-subscriptions
@@ -169,7 +169,7 @@ subscribed = enzoic.is_domain_subscribed_for_alerts(domain=domains[0])
 if subscribed:
     print(f"Domain, {domains[0]}, is already subscribed!")
 else:
-    print(F"Domain, {domains[0]}, is not subscribed!")
+    print(f"Domain, {domains[0]}, is not subscribed!")
 
 # get all domains subscribed for alerts on your account
 # this call returns paged results per https://www.enzoic.com/docs-exposure-alerts-service-api/#get-exposure-subscriptions-domains

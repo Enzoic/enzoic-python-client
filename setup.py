@@ -5,15 +5,15 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="enzoic",
-    version="1.23",
-    author="Jeffrey Kasser",
-    author_email="jeff@enzoic.com",
+    version="1.30",
+    author="Enzoic",
+    author_email="mike@enzoic.com",
     description="Python Client for Enzoic",
     url="https://github.com/Enzoic/enzoic-python-client",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires=["requests", "pytest", "passlib", "bcrypt", "argon2-cffi==20.1.0"],
+    install_requires=["requests", "pytest", "passlib", "bcrypt", "argon2-cffi==23.1.0"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

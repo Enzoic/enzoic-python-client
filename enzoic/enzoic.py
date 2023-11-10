@@ -90,7 +90,7 @@ class Enzoic:
         sha1 = hashing.calc_sha1_unsalted_hash(password)
         sha256 = hashing.calc_sha256_unsalted_hash(password)
         query_string = (
-            f"?partialmd5={md5[:10]}&partial_sha1={sha1[:10]}&sha256={sha256[:10]}"
+            f"?partial_md5={md5[:10]}&partial_sha1={sha1[:10]}&partial_sha256={sha256[:10]}"
         )
         response = self._make_rest_call(
             self.api_base_url + self.PASSWORDS_API_PATH + query_string, "GET", None

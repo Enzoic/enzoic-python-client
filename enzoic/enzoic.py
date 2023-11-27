@@ -278,7 +278,7 @@ class Enzoic:
             query_string += "&pagingToken=" + paging_token
 
         response = self._make_rest_call(
-            self.api_base_url + self.EXPOSURE_API_PATH + "?accountDomain=" + domain,
+            self.api_base_url + self.EXPOSURE_API_PATH + "?accountDomain=" + domain + query_string,
             "GET",
             None,
         )

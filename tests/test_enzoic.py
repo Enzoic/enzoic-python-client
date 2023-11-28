@@ -63,8 +63,8 @@ class TestGetExposuresForUser:
 
     def test_actual_exposure_for_username(self, enzoic):
         response = enzoic().get_exposures_for_user("eicar")
-        assert response["count"] == 8
-        assert len(response["exposures"]) == 8
+        assert response["count"] == 9
+        assert len(response["exposures"]) == 9
         assert set(response["exposures"]) == {
             "5820469ffdb8780510b329cc",
             "58258f5efdb8780be88c2c5d",
@@ -74,6 +74,7 @@ class TestGetExposuresForUser:
             "59cae0ce1d75b80e0070957c",
             "5bc64f5f4eb6d894f09eae70",
             "5bdcb0944eb6d8a97cfacdff",
+            "653980098502d3ce61f8bfbb"
         }
 
 
@@ -391,3 +392,4 @@ class TestGetDomainExposures:
             "57ffcf3c1395c80b30dd4429",
             "57dc11964d6db21300991b78",
         ]
+

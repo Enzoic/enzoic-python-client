@@ -537,3 +537,94 @@ class TestGetUserAlertSubscriptions:
         assert response["count"] > 13
         assert len(response["usernameHashes"]) >= 4
         assert response["pagingToken"] is not None
+
+
+class TestDomainAlertSubscriptions:
+    TEST_DOMAINS = [
+        "enzoictestadddomaintest1.com",
+        "enzoictestadddomaintest2.com"
+    ]
+
+    def test_clean_up_previous_add_domain_data(self, enzoic):
+        response = enzoic().delete_domain_alert_subscriptions(domains=self.TEST_DOMAINS)
+        assert response["deleted"] >= 0
+        assert response["notFound"] >= 0
+
+    def test_add_domain_alert_subscriptions(self, enzoic):
+        response = enzoic().add_domain_alert_subscriptions(domains=self.TEST_DOMAINS)
+        assert response["added"] >= 2
+        assert response["alreadyExisted"] >= 0
+
+    def test_add_domain_alert_subscriptions_again(self, enzoic):
+        response = enzoic().add_domain_alert_subscriptions(domains=self.TEST_DOMAINS)
+        assert response["added"] >= 0
+        assert response["alreadyExisted"] >= 2
+
+    def test_delete_domain_alert_subscription(self, enzoic):
+        response = enzoic().delete_domain_alert_subscriptions(domains=self.TEST_DOMAINS)
+        assert response["deleted"] >= 2
+        assert response["notFound"] >= 0
+
+    def test_delete_domain_alert_subscription_again_shows_not_found(self, enzoic):
+        response = enzoic().delete_domain_alert_subscriptions(domains=self.TEST_DOMAINS)
+        assert response["deleted"] >= 0
+        assert response["notFound"] >= 2
+
+
+class TestIsDomainSubscribedForAlerts:
+    TEST_DOMAIN = "enzoictesttestdomaintest1.com"
+
+    def test_add_test_data(self, enzoic):
+        response = enzoic().add_domain_alert_subscriptions(self.TEST_DOMAIN)
+        assert response["added"] >= 0
+        assert response["alreadyExisted"] >= 0
+
+    def test_domain_subscription_exists(self, enzoic):
+        response = enzoic().is_domain_subscribed_for_alerts(self.TEST_DOMAIN)
+        assert response is True
+
+    def test_delete_test_data(self, enzoic):
+        response = enzoic().delete_domain_alert_subscriptions(self.TEST_DOMAIN)
+        assert response["deleted"] >= 0
+        assert response["notFound"] >= 0
+
+    def test_domain_subscription_doesnt_exist(self, enzoic):
+        response = enzoic().is_domain_subscribed_for_alerts(self.TEST_DOMAIN)
+        assert response is False
+
+
+class TestGetDomainAlertSubscriptions:
+    TEST_DOMAINS = [
+        "enzoictestgetdomaintest1.com",
+        "enzoictestgetdomaintest2.com",
+        "enzoictestgetdomaintest3.com",
+        "enzoictestgetdomaintest4.com",
+        "enzoictestgetdomaintest5.com",
+        "enzoictestgetdomaintest6.com",
+        "enzoictestgetdomaintest7.com",
+        "enzoictestgetdomaintest8.com",
+        "enzoictestgetdomaintest9.com",
+        "enzoictestgetdomaintest10.com",
+        "enzoictestgetdomaintest11.com",
+        "enzoictestgetdomaintest12.com",
+        "enzoictestgetdomaintest13.com",
+        "enzoictestgetdomaintest14.com"
+    ]
+
+    def test_add_test_data(self, enzoic):
+        response = enzoic().add_domain_alert_subscriptions(self.TEST_DOMAINS)
+        assert response["added"] >= 0
+        assert response["alreadyExisted"] >= 0
+
+    def test_get_subscribed_domains(self, enzoic):
+        response = enzoic().get_domain_alert_subscriptions(4)
+        assert response["count"] >= 13
+        assert len(response["domains"]) == 4
+        assert response["pagingToken"] is not None
+
+    def test_get_subscribed_domains_for_next_page(self, enzoic):
+        first = enzoic().get_domain_alert_subscriptions(4)
+        paged_response = enzoic().get_domain_alert_subscriptions(4, paging_token=first["pagingToken"])
+        assert paged_response["count"] >= 13
+        assert len(paged_response["domains"]) == 4
+        assert paged_response["pagingToken"] is not None

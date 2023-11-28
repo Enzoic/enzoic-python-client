@@ -349,7 +349,7 @@ class Enzoic:
         :return:
         """
         payload = {
-            "usernameHashes": username_hashes,
+            "usernameHashes": [hashing.calc_sha256_unsalted_hash(username_hash.lower()) for username_hash in username_hashes],
         }
         if custom_data != "":
             payload["customData"] = custom_data
@@ -367,7 +367,7 @@ class Enzoic:
         :return:
         """
         payload = {
-            "usernameHashes": username_hashes,
+            "usernameHashes": [hashing.calc_sha256_unsalted_hash(username_hash.lower()) for username_hash in username_hashes],
         }
         response = self._make_rest_call(
             self.api_base_url + self.ALERTS_SERVICE_PATH, "DELETE", body=payload,
@@ -452,6 +452,7 @@ class Enzoic:
         :param username_hash: The username hash you wish to check for alert subscriptions.
         :return:
         """
+        username_hash = hashing.calc_sha256_unsalted_hash(username_hash.lower())
         response = self._make_rest_call(
             self.api_base_url + self.ALERTS_SERVICE_PATH + f"usernameHash={username_hash}", "GET", None,
         )
@@ -565,7 +566,6 @@ class Enzoic:
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
-
         if method == "POST" or method == "PUT" or method == "DELETE":
             r = requests.request(method, url=url, headers=headers, json=body)
         else:

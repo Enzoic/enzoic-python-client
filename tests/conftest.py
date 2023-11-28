@@ -40,12 +40,14 @@ def enzoic(_get_api_key, _get_api_secret):
             api_key = _get_api_key
         if api_secret is None:
             api_secret = _get_api_secret
-        return Enzoic(api_key=api_key, api_secret=api_secret)
+        return Enzoic(api_key=api_key, api_secret=api_secret, api_base_url=api_base_url)
     yield enzoic
+
 
 @pytest.fixture(scope="session")
 def password_types():
     yield PasswordType
+
 
 @pytest.fixture(scope="session")
 def enzoic_exceptions():

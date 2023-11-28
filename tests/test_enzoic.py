@@ -393,3 +393,11 @@ class TestGetDomainExposures:
             "57dc11964d6db21300991b78",
         ]
 
+    def test_get_exposed_users_for_domain_pagination(self, enzoic):
+        domain = "email.tst"
+        first_response = enzoic().get_exposures_for_domain(domain, include_exposure_details=False, page_size=2)
+        # now retrieve the second page with all the results
+        paged_response = enzoic().get_exposures_for_domain(domain, include_exposure_details=True, paging_token=first_response["pagingToken"])
+        assert paged_response["count"] == 10
+        assert len(paged_response["exposures"]) == 8
+        assert paged_response["pagingToken"] is None

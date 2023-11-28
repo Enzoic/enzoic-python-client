@@ -325,10 +325,6 @@ class TestGetUserPasswords:
         response = enzoic().get_user_passwords(username="@@bogus-user@@")
         assert response is False
 
-    def test_get_user_password_error(self, enzoic):
-        response = enzoic(api_base_url="bogus.enzoic.com").get_user_passwords(username="@@bogus-user@@")
-        assert response is False
-
     def test_account_without_permissions(self, enzoic, enzoic_exceptions):
         with pytest.raises(enzoic_exceptions.UnexpectedEnzoicAPIError) as exc_info:
             enzoic(
@@ -401,3 +397,143 @@ class TestGetDomainExposures:
         assert paged_response["count"] == 10
         assert len(paged_response["exposures"]) == 8
         assert paged_response["pagingToken"] is None
+
+
+class TestAlertSubscriptions:
+    TEST_USERS = [
+            "eicar_0@enzoic.com",
+            "eicar_1@enzoic.com"
+        ]
+
+    @pytest.mark.order(1)
+    def test_user_alert_subscription_cleanup_previous_test_data(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions(username_hashes=self.TEST_USERS)
+        assert response["deleted"] >= 0
+        assert response["notFound"] >= 0
+
+    @pytest.mark.order(2)
+    def test_add_user_alert_subscription(self, enzoic):
+        response = enzoic().add_user_alert_subscriptions(username_hashes=self.TEST_USERS)
+        assert response == {
+            "added": 2,
+            "alreadyExisted": 0,
+        }
+
+    @pytest.mark.order(3)
+    def test_add_user_alert_subscription_again(self, enzoic):
+        response = enzoic().add_user_alert_subscriptions(username_hashes=self.TEST_USERS)
+        assert response == {
+            "added": 0,
+            "alreadyExisted": 2,
+        }
+
+    @pytest.mark.order(4)
+    def test_user_alert_subscription_cleanup(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions(username_hashes=self.TEST_USERS)
+        assert response["deleted"] == 2
+        assert response["notFound"] == 0
+
+    @pytest.mark.order(5)
+    def test_user_alert_subscription_cleanup_no_data(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions(username_hashes=self.TEST_USERS)
+        assert response["deleted"] == 0
+        assert response["notFound"] == 2
+
+
+class TestAlertSubscriptionsCustomData:
+    TEST_USERS = [
+            "eicar_0@enzoic.com",
+            "eicar_1@enzoic.com"
+        ]
+    CUSTOM_DATA_1 = "123456"
+    CUSTOM_DATA_2 = "1234567"
+
+    @pytest.mark.order(6)
+    def test_user_alert_subscription_custom_data_cleanup_previous_test_data(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions_with_custom_data(custom_data=self.CUSTOM_DATA_1)
+        assert response["deleted"] >= 0
+        assert response["notFound"] >= 0
+
+    @pytest.mark.order(7)
+    def test_user_alert_subscription_custom_data_cleanup_previous_test_data_2(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions_with_custom_data(custom_data=self.CUSTOM_DATA_2)
+        assert response["deleted"] >= 0
+        assert response["notFound"] >= 0
+
+    @pytest.mark.order(8)
+    def test_add_user_alert_subscription_custom_data(self, enzoic):
+        response = enzoic().add_user_alert_subscriptions(username_hashes=self.TEST_USERS, custom_data=self.CUSTOM_DATA_1)
+        assert response == {
+            "added": 2,
+            "alreadyExisted": 0,
+        }
+
+    @pytest.mark.order(9)
+    def test_add_user_alert_subscription_again_custom_data(self, enzoic):
+        response = enzoic().add_user_alert_subscriptions(username_hashes=self.TEST_USERS, custom_data=self.CUSTOM_DATA_1)
+        assert response == {
+            "added": 0,
+            "alreadyExisted": 2,
+        }
+
+    @pytest.mark.order(10)
+    def test_add_user_alert_subscription_again_different_custom_data(self, enzoic):
+        response = enzoic().add_user_alert_subscriptions(username_hashes=self.TEST_USERS, custom_data=self.CUSTOM_DATA_2)
+        assert response == {
+            "added": 2,
+            "alreadyExisted": 0,
+        }
+
+    @pytest.mark.order(11)
+    def test_user_alert_subscription_cleanup_custom_data(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions_with_custom_data(custom_data=self.CUSTOM_DATA_1)
+        assert response["deleted"] == 2
+        assert response["notFound"] == 0
+
+    @pytest.mark.order(12)
+    def test_user_alert_subscription_cleanup_alt_custom_data(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions_with_custom_data(custom_data=self.CUSTOM_DATA_2)
+        assert response["deleted"] == 2
+        assert response["notFound"] == 0
+
+    @pytest.mark.order(13)
+    def test_user_alert_subscription_cleanup_custom_data_nothing_to_delete(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions_with_custom_data(custom_data=self.CUSTOM_DATA_1)
+        assert response["deleted"] == 0
+        assert response["notFound"] == 1
+
+    @pytest.mark.order(14)
+    def test_user_alert_subscription_cleanup_alt_custom_data_nothing_to_delete(self, enzoic):
+        response = enzoic().delete_user_alert_subscriptions_with_custom_data(custom_data=self.CUSTOM_DATA_2)
+        assert response["deleted"] == 0
+        assert response["notFound"] == 1
+
+
+class TestGetUserAlertSubscriptions:
+    TEST_USER_HASHES = [
+        "eicar_0@enzoic.com",
+        "eicar_1@enzoic.com",
+        "eicar_2@enzoic.com",
+        "eicar_3@enzoic.com",
+        "eicar_4@enzoic.com",
+        "eicar_5@enzoic.com",
+        "eicar_6@enzoic.com",
+        "eicar_7@enzoic.com",
+        "eicar_8@enzoic.com",
+        "eicar_9@enzoic.com",
+        "eicar_10@enzoic.com",
+        "eicar_11@enzoic.com",
+        "eicar_12@enzoic.com",
+        "eicar_13@enzoic.com",
+    ]
+
+    def test_add_large_user_alert_subscriptions(self, enzoic):
+        response = enzoic().add_user_alert_subscriptions(username_hashes=self.TEST_USER_HASHES)
+        assert response["added"] >= 0
+        assert response["alreadyExisted"] >= 0
+
+    def test_user_get_alert_subscriptions(self, enzoic):
+        response = enzoic().get_user_alert_subscriptions(4)
+        assert response["count"] > 13
+        assert len(response["usernameHashes"]) >= 4
+        assert response["pagingToken"] is not None

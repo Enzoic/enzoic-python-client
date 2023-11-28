@@ -13,6 +13,7 @@ passlib = "*"
 pytest = "*"
 requests = "*"
 pytest-env = "*"
+pytest-order = "*"
 
 [requires]
 python_version = "3"

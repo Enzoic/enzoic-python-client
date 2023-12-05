@@ -74,7 +74,12 @@ class Enzoic:
     def check_hashed_password(self, hashed_pw: str, hash_type: int) -> bool:
         """
         Checks whether the provided password is in the Enzoic database of known, compromised passwords. Pass in the type
-        of password hash. Supports NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively).
+        of password hash. Supports NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively). You can utilize the PasswordTypes
+        enum for ease of use like so:
+
+        from enzoic.enums.password_types import PasswordType
+        PasswordType.NTLM
+
         See: https://www.enzoic.com/docs/passwords-api
         :param password: The full hash of a password you wish to check. Must match the corresponding hash_type
         parameter

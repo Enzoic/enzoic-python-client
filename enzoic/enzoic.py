@@ -81,8 +81,10 @@ class Enzoic:
         PasswordType.NTLM
 
         See: https://www.enzoic.com/docs/passwords-api
-        :param password: The full hash of a password you wish to check. Must match the corresponding hash_type
-        parameter
+        :param hashed_pw: The full hash of a password you wish to check. Must match the corresponding hash_type
+        parameter. Only the first 7 characters will be sent.
+        :param hash_type: The int of the respective password hash supplied, possible values are:
+         NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively)
         :return: True if the password is a known, compromised password and should not be used
         """
         if hash_type == PasswordType.NTLM:
@@ -103,7 +105,7 @@ class Enzoic:
             )
 
         payload = {
-            key: hashed_pw[:8]
+            key: hashed_pw[:7]
         }
 
         response = self._make_rest_call(
@@ -597,7 +599,6 @@ class Enzoic:
         # username needs to be converted to lowercase and url encoded
         query_params = {
             "username": str(username).lower(),
-            "includePasswords": 1,
         }
 
         if include_exposure_details:
@@ -625,7 +626,6 @@ class Enzoic:
         # username needs to be converted to sha256 partial hash and url encoded
         query_params = {
             "partialUsernameHash": hashing.calc_sha256_unsalted_hash(str(username).lower())[:8],
-            "includePasswords": 1,
         }
 
         if include_exposure_details:

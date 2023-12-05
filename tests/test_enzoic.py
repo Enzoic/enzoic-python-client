@@ -691,8 +691,8 @@ class TestGetUserPasswordsByPartialHash:
         ]
 
     def test_get_user_password_not_found(self, enzoic):
-        response = enzoic().get_user_passwords_by_partial_hash(username="@@bogus-user@@")
-        assert response is False
+        response = enzoic().get_user_passwords_by_partial_hash(username="!!!!!@@bogus-user@@!!!!!")
+        assert len(response["candidates"]) == 0
 
     def test_account_without_permissions(self, enzoic, enzoic_exceptions):
         with pytest.raises(enzoic_exceptions.UnexpectedEnzoicAPIError) as exc_info:

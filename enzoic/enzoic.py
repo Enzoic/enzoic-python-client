@@ -1,6 +1,6 @@
 import base64
 import requests
-from enzoic.exceptions import UnexpectedEnzoicAPIError
+from enzoic.exceptions import UnexpectedEnzoicAPIError, UnsupportedPasswordType
 from enzoic.utilities import hashing
 from enzoic.enums.password_types import PasswordType
 from urllib.parse import urlencode, quote_plus

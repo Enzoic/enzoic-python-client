@@ -74,9 +74,10 @@ class Enzoic:
     def check_hashed_password(self, hashed_pw: str, hash_type: int) -> bool:
         """
         Checks whether the provided password is in the Enzoic database of known, compromised passwords. Pass in the type
-        of password
+        of password hash. Supports NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively).
         See: https://www.enzoic.com/docs/passwords-api
-        :param password: The plaintext password to be checked, will only be checked against NTLM hashes.
+        :param password: The full hash of a password you wish to check. Must match the corresponding hash_type
+        parameter
         :return: True if the password is a known, compromised password and should not be used
         """
         if hash_type == PasswordType.NTLM:
@@ -635,7 +636,7 @@ class Enzoic:
         else:
             return response.json()
 
-    def get_user_passwords_by_domain(self, domain: str, page_size: int = 100, paging_token: str = None) -> Union[bool, Dict]:
+    def get_user_passwords_by_domain(self, domain: str, page_size: int = None, paging_token: str = None) -> Union[bool, Dict]:
         """
         See: https://api.enzoic.com/v1/cleartext-credentials-by-domain
         :param domain: The domain you wish to receive a list of exposed users and their passwords for.

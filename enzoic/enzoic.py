@@ -71,6 +71,53 @@ class Enzoic:
         else:
             return False
 
+    def check_hashed_password(self, hashed_pw: str, hash_type: int) -> bool:
+        """
+        Checks whether the provided password is in the Enzoic database of known, compromised passwords. Pass in the type
+        of password
+        See: https://www.enzoic.com/docs/passwords-api
+        :param password: The plaintext password to be checked, will only be checked against NTLM hashes.
+        :return: True if the password is a known, compromised password and should not be used
+        """
+        if hash_type == PasswordType.NTLM:
+            key = "partialNTLM"
+        elif hash_type == PasswordType.SHA256_UNSALTED:
+            key = "partialSHA256"
+        elif hash_type == PasswordType.MD5_UNSALTED:
+            key = "partialMD5"
+        elif hash_type == PasswordType.SHA1_UNSALTED:
+            key = "partialSHA1"
+        else:
+            raise UnsupportedPasswordType(
+                "Unsupported hash type provided. The following values for 'password_type' are supported:"
+                f"\nNTLM: {PasswordType.NTLM}"
+                f"\nMD5: {PasswordType.MD5_UNSALTED}"
+                f"\nSHA1: {PasswordType.SHA1_UNSALTED}"
+                f"\nSHA256: {PasswordType.SHA256_UNSALTED}"
+            )
+
+        payload = {
+            key: hashed_pw[:8]
+        }
+
+        response = self._make_rest_call(
+            self.api_base_url + self.PASSWORDS_API_PATH, "POST", body=payload
+        )
+
+        if response.status_code != 404:
+            for candidate in response.json()["candidates"]:
+                keys = candidate.keys()
+                if (
+                    ("md5" in keys and candidate["md5"] == hashed_pw)
+                    or ("sha1" in keys and candidate["sha1"] == hashed_pw)
+                    or ("sha256" in keys and candidate["sha256"] == hashed_pw)
+                    or ("ntlm" in keys and candidate["ntlm"] == hashed_pw)
+                ):
+                    return True
+            return False
+        else:
+            return False
+
     def check_password_ex(self, password: str) -> Tuple[bool, bool, None, int]:
         """
         Checks whether the provided password is in the Enzoic database of known, compromised passwords and returns the

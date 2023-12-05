@@ -39,7 +39,7 @@ class Enzoic:
         ).decode("utf-8")
 
     def __repr__(self):
-        return "Enzoic(" + self.api_key + ", " + self.api_secret +", " + self.api_base_url + ")"
+        return "Enzoic(" + self.api_key + ", " + self.api_secret + ", " + self.api_base_url + ")"
 
     def check_password(self, password: str) -> bool:
         """
@@ -303,8 +303,8 @@ class Enzoic:
     def get_exposed_users_for_domain(
         self,
         domain: str,
-        page_size:int = None,
-        paging_token:str = None
+        page_size: int = None,
+        paging_token: str = None
     ) -> Union[Dict, requests.Response]:
         """
         GetExposedUsersForDomain returns a list of all users for a given email domain who have had credentials revealed
@@ -338,7 +338,7 @@ class Enzoic:
 
     def get_exposures_for_domain(
         self,
-        domain:str,
+        domain: str,
         include_exposure_details: bool = False,
         page_size: int = None,
         paging_token: str = None
@@ -584,19 +584,56 @@ class Enzoic:
         Returns a list of passwords that Enzoic has found for a specific user.  This call must be enabled for your
         account or you will receive a 403 rejection when attempting to call it.
         see https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/credentials-api/cleartext-credentials-api
-        :param username: The username you wish to receive the a list of passwords for.
+        :param username: The username you wish to receive a list of passwords for.
         :param include_exposure_details: Includes the details of the exposure the password was found in if True,
         :return:
         """
         # username needs to be converted to lowercase and url encoded
-        params = {
+        query_params = {
             "username": str(username).lower(),
             "includePasswords": 1,
         }
         if include_exposure_details:
-            params["includeExposureDetails"] = int(include_exposure_details)
+            query_params["includeExposureDetails"] = int(include_exposure_details)
 
-        result = urlencode(params, quote_via=quote_plus)
+        result = urlencode(query_params, quote_via=quote_plus)
+
+        response = self._make_rest_call(
+            self.api_base_url + f"/cleartext-credentials?{result}", "GET", None
+        )
+        if response.status_code == 404:
+            return False
+        else:
+            return response.json()
+
+    def get_user_passwords_by_partial_hash(self, username: str, include_exposure_details: bool = False) -> Union[bool, Dict]:
+        """
+        Returns a list of passwords that Enzoic has found for a specific user.  This call must be enabled for your
+        account or you will receive a 403 rejection when attempting to call it.
+        see https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/credentials-api/cleartext-credentials-api
+        :param username: The username you wish to receive a list of passwords for.
+        :param include_exposure_details: Includes the details of the exposure the password was found in if True,
+        :return:
+        """
+        # username needs to be converted to sha256 partial hash and url encoded
+        query_params = {
+            "partialUsernameHash": hashing.calc_sha256_unsalted_hash(str(username).lower())[:8],
+            "includePasswords": 1,
+        }
+
+        if include_exposure_details:
+            query_params["includeExposureDetails"] = int(include_exposure_details)
+
+        result = urlencode(query_params, quote_via=quote_plus)
+
+        response = self._make_rest_call(
+            self.api_base_url + f"/cleartext-credentials-by-partial-hash?{result}", "GET", None
+        )
+        if response.status_code == 404:
+            return False
+        else:
+            return response.json()
+
 
         response = self._make_rest_call(
             self.api_base_url + self.ACCOUNTS_API_PATH + f"?{result}", "GET", None)

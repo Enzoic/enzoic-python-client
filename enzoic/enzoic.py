@@ -1,6 +1,6 @@
 import base64
 import requests
-from enzoic.exceptions import UnexpectedEnzoicAPIError
+from enzoic.exceptions import UnexpectedEnzoicAPIError, UnsupportedPasswordType
 from enzoic.utilities import hashing
 from enzoic.enums.password_types import PasswordType
 from urllib.parse import urlencode, quote_plus
@@ -39,7 +39,7 @@ class Enzoic:
         ).decode("utf-8")
 
     def __repr__(self):
-        return "Enzoic(" + self.api_key + ", " + self.api_secret +", " + self.api_base_url + ")"
+        return "Enzoic(" + self.api_key + ", " + self.api_secret + ", " + self.api_base_url + ")"
 
     def check_password(self, password: str) -> bool:
         """
@@ -65,6 +65,61 @@ class Enzoic:
                     ("md5" in keys and candidate["md5"] == md5)
                     or ("sha1" in keys and candidate["sha1"] == sha1)
                     or ("sha256" in keys and candidate["sha256"] == sha256)
+                ):
+                    return True
+            return False
+        else:
+            return False
+
+    def check_hashed_password(self, hashed_pw: str, hash_type: int) -> bool:
+        """
+        Checks whether the provided password is in the Enzoic database of known, compromised passwords. Pass in the type
+        of password hash. Supports NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively). You can utilize the PasswordTypes
+        enum for ease of use like so:
+
+        from enzoic.enums.password_types import PasswordType
+        PasswordType.NTLM
+
+        See: https://www.enzoic.com/docs/passwords-api
+        :param hashed_pw: The full hash of a password you wish to check. Must match the corresponding hash_type
+        parameter. Only the first 7 characters will be sent.
+        :param hash_type: The int of the respective password hash supplied, possible values are:
+         NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively)
+        :return: True if the password is a known, compromised password and should not be used
+        """
+        if hash_type == PasswordType.NTLM:
+            key = "partialNTLM"
+        elif hash_type == PasswordType.SHA256_UNSALTED:
+            key = "partialSHA256"
+        elif hash_type == PasswordType.MD5_UNSALTED:
+            key = "partialMD5"
+        elif hash_type == PasswordType.SHA1_UNSALTED:
+            key = "partialSHA1"
+        else:
+            raise UnsupportedPasswordType(
+                "Unsupported hash type provided. The following values for 'password_type' are supported:"
+                f"\nNTLM: {PasswordType.NTLM}"
+                f"\nMD5: {PasswordType.MD5_UNSALTED}"
+                f"\nSHA1: {PasswordType.SHA1_UNSALTED}"
+                f"\nSHA256: {PasswordType.SHA256_UNSALTED}"
+            )
+
+        payload = {
+            key: hashed_pw[:7]
+        }
+
+        response = self._make_rest_call(
+            self.api_base_url + self.PASSWORDS_API_PATH, "POST", body=payload
+        )
+
+        if response.status_code != 404:
+            for candidate in response.json()["candidates"]:
+                keys = candidate.keys()
+                if (
+                    ("md5" in keys and candidate["md5"] == hashed_pw)
+                    or ("sha1" in keys and candidate["sha1"] == hashed_pw)
+                    or ("sha256" in keys and candidate["sha256"] == hashed_pw)
+                    or ("ntlm" in keys and candidate["ntlm"] == hashed_pw)
                 ):
                     return True
             return False
@@ -256,8 +311,8 @@ class Enzoic:
     def get_exposed_users_for_domain(
         self,
         domain: str,
-        page_size:int = None,
-        paging_token:str = None
+        page_size: int = None,
+        paging_token: str = None
     ) -> Union[Dict, requests.Response]:
         """
         GetExposedUsersForDomain returns a list of all users for a given email domain who have had credentials revealed
@@ -291,7 +346,7 @@ class Enzoic:
 
     def get_exposures_for_domain(
         self,
-        domain:str,
+        domain: str,
         include_exposure_details: bool = False,
         page_size: int = None,
         paging_token: str = None
@@ -537,22 +592,78 @@ class Enzoic:
         Returns a list of passwords that Enzoic has found for a specific user.  This call must be enabled for your
         account or you will receive a 403 rejection when attempting to call it.
         see https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/credentials-api/cleartext-credentials-api
-        :param username: The username you wish to receive the a list of passwords for.
+        :param username: The username you wish to receive a list of passwords for.
         :param include_exposure_details: Includes the details of the exposure the password was found in if True,
         :return:
         """
         # username needs to be converted to lowercase and url encoded
-        params = {
+        query_params = {
             "username": str(username).lower(),
-            "includePasswords": 1,
         }
-        if include_exposure_details:
-            params["includeExposureDetails"] = int(include_exposure_details)
 
-        result = urlencode(params, quote_via=quote_plus)
+        if include_exposure_details:
+            query_params["includeExposureDetails"] = int(include_exposure_details)
+
+        result = urlencode(query_params, quote_via=quote_plus)
 
         response = self._make_rest_call(
-            self.api_base_url + self.ACCOUNTS_API_PATH + f"?{result}", "GET", None)
+            self.api_base_url + f"/cleartext-credentials?{result}", "GET", None
+        )
+        if response.status_code == 404:
+            return False
+        else:
+            return response.json()
+
+    def get_user_passwords_by_partial_hash(self, username: str, include_exposure_details: bool = False) -> Union[bool, Dict]:
+        """
+        Returns a list of passwords that Enzoic has found for a specific user.  This call must be enabled for your
+        account or you will receive a 403 rejection when attempting to call it.
+        see https://docs.enzoic.com/enzoic-api-developer-documentation/api-reference/credentials-api/cleartext-credentials-api
+        :param username: The username you wish to receive a list of passwords for.
+        :param include_exposure_details: Includes the details of the exposure the password was found in if True,
+        :return:
+        """
+        # username needs to be converted to sha256 partial hash and url encoded
+        query_params = {
+            "partialUsernameHash": hashing.calc_sha256_unsalted_hash(str(username).lower())[:8],
+        }
+
+        if include_exposure_details:
+            query_params["includeExposureDetails"] = int(include_exposure_details)
+
+        result = urlencode(query_params, quote_via=quote_plus)
+
+        response = self._make_rest_call(
+            self.api_base_url + f"/cleartext-credentials-by-partial-hash?{result}", "GET", None
+        )
+        if response.status_code == 404:
+            return False
+        else:
+            return response.json()
+
+    def get_user_passwords_by_domain(self, domain: str, page_size: int = None, paging_token: str = None) -> Union[bool, Dict]:
+        """
+        See: https://api.enzoic.com/v1/cleartext-credentials-by-domain
+        :param domain: The domain you wish to receive a list of exposed users and their passwords for.
+        :param page_size: The amount of results returned per request, defaults to 100, max is 500.
+        :param paging_token: If there are additional pages of results then use this to get the next page.
+        :return:
+        """
+        query_params = {
+            "domain": str(domain).lower(),
+        }
+        if page_size:
+            query_params["pageSize"] = str(page_size)
+
+        if paging_token:
+            query_params["pagingToken"] = paging_token
+
+        result = urlencode(query_params, quote_via=quote_plus)
+
+        response = self._make_rest_call(
+            self.api_base_url + f"/cleartext-credentials-by-domain?{result}", "GET", None
+        )
+
         if response.status_code == 404:
             return False
         else:

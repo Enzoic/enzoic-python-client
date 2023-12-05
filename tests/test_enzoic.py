@@ -141,6 +141,36 @@ class TestCheckPassword:
         assert revealed_in_exposure is True
         assert relative_exposure_frequency > 0
 
+    def test_hashed_password_by_ntlm(self, enzoic, password_types):
+        ntlm_hash = "8846f7eaee8fb117ad06bdd830b7586c"
+        assert enzoic().check_hashed_password(hashed_pw=ntlm_hash, hash_type=password_types.NTLM) is True
+
+    def test_hashed_password_by_md5(self, enzoic, password_types):
+        md5_hash = "5f4dcc3b5aa765d61d8327deb882cf99"
+        assert enzoic().check_hashed_password(hashed_pw=md5_hash, hash_type=password_types.MD5_UNSALTED) is True
+
+    def test_hashed_password_by_sha256(self, enzoic, password_types):
+        sha256_hash = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+        assert enzoic().check_hashed_password(hashed_pw=sha256_hash, hash_type=password_types.SHA256_UNSALTED) is True
+
+    def test_hashed_password_by_sha1(self, enzoic, password_types):
+        sha1_hash = "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8"
+        assert enzoic().check_hashed_password(hashed_pw=sha1_hash, hash_type=password_types.SHA1_UNSALTED) is True
+
+    def test_unsupported_hash_type_provided(self, enzoic, password_types, enzoic_exceptions):
+        ntlm_hash = "8846f7eaee8fb117ad06bdd830b7586c"
+        with pytest.raises(enzoic_exceptions.UnsupportedPasswordType) as exc_info:
+            enzoic().check_hashed_password(hashed_pw=ntlm_hash, hash_type=password_types.VBulletinPost3_8_5)
+            assert "Unsupported hash type provided." in str(exc_info.value)
+            assert password_types.NTLM in str(exc_info.value)
+            assert password_types.SHA1_UNSALTED in str(exc_info.value)
+            assert password_types.SHA256_UNSALTED in str(exc_info.value)
+            assert password_types.MD5_UNSALTED in str(exc_info.value)
+
+    def test_uncompromised_password_hash(self, enzoic, password_types):
+        ntlm_hash = "6708d6fd35e9fbcda86be9703a20af8c6f595a2f"
+        assert enzoic().check_hashed_password(hashed_pw=ntlm_hash, hash_type=password_types.NTLM) is False
+
 
 class TestGetUserPasswords:
     def test_get_user_password(self, enzoic):
@@ -330,6 +360,345 @@ class TestGetUserPasswords:
             enzoic(
                 os.environ.get("PP_API_KEY_2"), os.environ.get("PP_API_SECRET_2")
             ).get_user_passwords("eicar_0@enzoic.com")
+        assert "Your account is not allowed to make this call.  Please contact sales@enzoic.com." in str(exc_info.value)
+
+
+class TestGetUserPasswordsByDomain:
+    def test_get_passwords_for_domain_default_page_size(self, enzoic):
+        domain_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com")
+        assert domain_response["count"] == 94
+        assert domain_response["pagingToken"] is None
+        assert len(domain_response["users"]) == 94
+
+    def test_get_passwords_for_domain_specific_page_size(self, enzoic):
+        domain_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com", page_size=10)
+        assert domain_response["count"] == 94
+        assert domain_response["pagingToken"] is not None
+        assert len(domain_response["users"]) == 10
+
+    def test_get_passwords_for_domain_pagination(self, enzoic):
+        paged_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com", page_size=10)
+        # now get the paginated results
+        domain_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com", paging_token=paged_response["pagingToken"])
+        assert domain_response["count"] == 94
+        assert domain_response["pagingToken"] is None
+        assert len(domain_response["users"]) == 84
+
+
+class TestGetUserPasswordsByPartialHash:
+    def test_get_user_password(self, enzoic):
+        response = enzoic().get_user_passwords_by_partial_hash("eicar_0@enzoic.com")
+        assert response["candidates"] == [
+            {
+                'usernameHash': '705bce5505615a1437cc005f933f5891c53778ead4b18b44195682b2ae90d7f7',
+                'lastBreachDate': '2020-04-23T17:06:16.000Z',
+                'passwords': [
+                    {'hashType': 0, 'salt': '', 'password': 'sofi130991', 'exposures': ['5825260cfdb8780854c40c84']},
+                    {'hashType': 0, 'salt': '', 'password': 'Merda39a2j', 'exposures': ['5820469ffdb8780510b329cc']},
+                    {'hashType': 0, 'salt': '', 'password': 'nirvana', 'exposures': ['5ea1cb08d3cef70b4cda265a']}]
+            },
+            {
+                'usernameHash': '705bce557110384a4ce76aa9c33a12af14ac1eee3978ac3076f866aa0d84f07a',
+                'lastBreachDate': '2022-10-14T07:02:40.000Z',
+                'passwords': [
+                    {'hashType': 0, 'salt': '', 'password': 'password123', 'exposures': ['634908d2e0513eb0788aa0b9', '634908d06715cc1b5b201a1a']},
+                    {'hashType': 0, 'salt': '', 'password': 'g0oD_on3', 'exposures': ['634908d2e0513eb0788aa0b9']},
+                    {'hashType': 0, 'salt': '', 'password': 'Easy2no', 'exposures': ['634908d26715cc1b5b201a1d']},
+                    {'hashType': 0, 'salt': '', 'password': '123456', 'exposures': ['63490990e0513eb0788aa0d1', '634908d0e0513eb0788aa0b5']}]
+            },
+            {
+                'usernameHash': '705bce557ebcf8504587e87fb691ae37c2f00655db024f0fc72c29b775533641',
+                'lastBreachDate': '2022-05-16T17:20:13.000Z',
+                'passwords': [
+                    {'hashType': 0, 'salt': '', 'password': '122000888', 'exposures': ['628287cd3e27d0867a43070a']}
+                ]
+            }
+        ]
+
+    def test_get_user_password_with_details(self, enzoic):
+        response = enzoic().get_user_passwords_by_partial_hash("eicar_0@enzoic.com", include_exposure_details=True)
+        assert response["candidates"] == [
+           {
+              "usernameHash":"705bce5505615a1437cc005f933f5891c53778ead4b18b44195682b2ae90d7f7",
+              "lastBreachDate":"2020-04-23T17:06:16.000Z",
+              "passwords":[
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"sofi130991",
+                    "exposures":[
+                       {
+                          "id":"5825260cfdb8780854c40c84",
+                          "title":"zoosk.com",
+                          "entries":53778792,
+                          "date":"2011-12-31T00:00:00.000Z",
+                          "category":"Dating",
+                          "source":"Unspecified",
+                          "passwordType":"MD5",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords",
+                             "Usernames"
+                          ],
+                          "dateAdded":"2016-11-11T01:59:40.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":639449
+                       }
+                    ]
+                 },
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"Merda39a2j",
+                    "exposures":[
+                       {
+                          "id":"5820469ffdb8780510b329cc",
+                          "title":"last.fm",
+                          "entries":81967007,
+                          "date":"2012-03-01T00:00:00.000Z",
+                          "category":"Music",
+                          "source":"Unspecified",
+                          "passwordType":"MD5",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords",
+                             "Usernames",
+                             "Website Activity"
+                          ],
+                          "dateAdded":"2016-11-07T09:17:19.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":1219053
+                       }
+                    ]
+                 },
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"nirvana",
+                    "exposures":[
+                       {
+                          "id":"5ea1cb08d3cef70b4cda265a",
+                          "title":"christianpassions.com",
+                          "entries":1275759,
+                          "date":"2020-02-01T00:00:00.000Z",
+                          "category":"Dating",
+                          "source":"Unspecified",
+                          "passwordType":"Cleartext",
+                          "exposedData":[
+                             "Passwords",
+                             "Usernames"
+                          ],
+                          "dateAdded":"2020-04-23T17:06:16.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":16150
+                       }
+                    ]
+                 }
+              ]
+           },
+           {
+              "usernameHash":"705bce557110384a4ce76aa9c33a12af14ac1eee3978ac3076f866aa0d84f07a",
+              "lastBreachDate":"2022-10-14T07:02:40.000Z",
+              "passwords":[
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"password123",
+                    "exposures":[
+                       {
+                          "id":"634908d06715cc1b5b201a1a",
+                          "title":"enzoic test breach 1",
+                          "entries":5,
+                          "date":None,
+                          "category":"Testing Ignore",
+                          "source":"Testing - Ignore",
+                          "passwordType":"MD5",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords"
+                          ],
+                          "dateAdded":"2022-10-14T06:59:28.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":1
+                       },
+                       {
+                          "id":"634908d2e0513eb0788aa0b9",
+                          "title":"enzoic test breach 5",
+                          "entries":2,
+                          "date":None,
+                          "category":"Testing Ignore",
+                          "source":"Testing - Ignore",
+                          "passwordType":"Cleartext",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords"
+                          ],
+                          "dateAdded":"2022-10-14T06:59:30.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":1
+                       }
+                    ]
+                 },
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"g0oD_on3",
+                    "exposures":[
+                       {
+                          "id":"634908d2e0513eb0788aa0b9",
+                          "title":"enzoic test breach 5",
+                          "entries":2,
+                          "date":None,
+                          "category":"Testing Ignore",
+                          "source":"Testing - Ignore",
+                          "passwordType":"Cleartext",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords"
+                          ],
+                          "dateAdded":"2022-10-14T06:59:30.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":1
+                       }
+                    ]
+                 },
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"Easy2no",
+                    "exposures":[
+                       {
+                          "id":"634908d26715cc1b5b201a1d",
+                          "title":"enzoic test breach 4",
+                          "entries":4,
+                          "date":None,
+                          "category":"Testing Ignore",
+                          "source":"Testing - Ignore",
+                          "passwordType":"MD5",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords"
+                          ],
+                          "dateAdded":"2022-10-14T06:59:30.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":1
+                       }
+                    ]
+                 },
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"123456",
+                    "exposures":[
+                       {
+                          "id":"634908d0e0513eb0788aa0b5",
+                          "title":"enzoic test breach 2",
+                          "entries":5,
+                          "date":None,
+                          "category":"Testing Ignore",
+                          "source":"Testing - Ignore",
+                          "passwordType":"MD5",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords"
+                          ],
+                          "dateAdded":"2022-10-14T06:59:28.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":1
+                       },
+                       {
+                          "id":"63490990e0513eb0788aa0d1",
+                          "title":"enzoic test breach 3",
+                          "entries":3,
+                          "date":None,
+                          "category":"Testing Ignore",
+                          "source":"Testing - Ignore",
+                          "passwordType":"Cleartext",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords"
+                          ],
+                          "dateAdded":"2022-10-14T07:02:40.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":1
+                       }
+                    ]
+                 }
+              ]
+           },
+           {
+              "usernameHash":"705bce557ebcf8504587e87fb691ae37c2f00655db024f0fc72c29b775533641",
+              "lastBreachDate":"2022-05-16T17:20:13.000Z",
+              "passwords":[
+                 {
+                    "hashType":0,
+                    "salt":"",
+                    "password":"122000888",
+                    "exposures":[
+                       {
+                          "id":"628287cd3e27d0867a43070a",
+                          "title":"readnovel.com",
+                          "entries":19125314,
+                          "date":"2019-05-01T00:00:00.000Z",
+                          "category":"Books",
+                          "source":"Unspecified",
+                          "passwordType":"MD5",
+                          "exposedData":[
+                             "Emails",
+                             "Passwords",
+                             "Usernames",
+                             "Phone Numbers",
+                             "Genders"
+                          ],
+                          "dateAdded":"2022-05-16T17:20:13.000Z",
+                          "sourceURLs":[
+
+                          ],
+                          "sourceFileCount":1,
+                          "domainsAffected":297923
+                       }
+                    ]
+                 }
+              ]
+           }
+        ]
+
+    def test_get_user_password_not_found(self, enzoic):
+        response = enzoic().get_user_passwords_by_partial_hash(username="@@bogus-user@@")
+        assert response is False
+
+    def test_account_without_permissions(self, enzoic, enzoic_exceptions):
+        with pytest.raises(enzoic_exceptions.UnexpectedEnzoicAPIError) as exc_info:
+            enzoic(
+                os.environ.get("PP_API_KEY_2"), os.environ.get("PP_API_SECRET_2")
+            ).get_user_passwords_by_partial_hash("eicar_0@enzoic.com")
         assert "Your account is not allowed to make this call.  Please contact sales@enzoic.com." in str(exc_info.value)
 
 
@@ -628,3 +997,5 @@ class TestGetDomainAlertSubscriptions:
         assert paged_response["count"] >= 13
         assert len(paged_response["domains"]) == 4
         assert paged_response["pagingToken"] is not None
+
+

@@ -593,6 +593,7 @@ class Enzoic:
             "username": str(username).lower(),
             "includePasswords": 1,
         }
+
         if include_exposure_details:
             query_params["includeExposureDetails"] = int(include_exposure_details)
 
@@ -634,9 +635,29 @@ class Enzoic:
         else:
             return response.json()
 
+    def get_user_passwords_by_domain(self, domain: str, page_size: int = 100, paging_token: str = None) -> Union[bool, Dict]:
+        """
+        See: https://api.enzoic.com/v1/cleartext-credentials-by-domain
+        :param domain: The domain you wish to receive a list of exposed users and their passwords for.
+        :param page_size: The amount of results returned per request, defaults to 100, max is 500.
+        :param paging_token: If there are additional pages of results then use this to get the next page.
+        :return:
+        """
+        query_params = {
+            "domain": str(domain).lower(),
+        }
+        if page_size:
+            query_params["pageSize"] = str(page_size)
+
+        if paging_token:
+            query_params["pagingToken"] = paging_token
+
+        result = urlencode(query_params, quote_via=quote_plus)
 
         response = self._make_rest_call(
-            self.api_base_url + self.ACCOUNTS_API_PATH + f"?{result}", "GET", None)
+            self.api_base_url + f"/cleartext-credentials-by-domain?{result}", "GET", None
+        )
+
         if response.status_code == 404:
             return False
         else:

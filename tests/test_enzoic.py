@@ -171,6 +171,54 @@ class TestCheckPassword:
         ntlm_hash = "6708d6fd35e9fbcda86be9703a20af8c6f595a2f"
         assert enzoic().check_hashed_password(hashed_pw=ntlm_hash, hash_type=password_types.NTLM) is False
 
+    def test_get_candidates_by_partial_ntlm_hash(self, enzoic, password_types):
+        ntlm_hash = "8846f7e"
+        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.NTLM)
+        assert len(candidates) > 0
+        for candidate in candidates:
+            assert candidate.startswith(ntlm_hash)
+
+    def test_get_candidates_by_partial_md5_hash(self, enzoic, password_types):
+        md5_hash = "5f4dcc3"
+        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=md5_hash, hash_type=password_types.MD5_UNSALTED)
+        assert len(candidates) > 0
+        for candidate in candidates:
+            assert candidate.startswith(md5_hash)
+
+    def test_get_candidates_by_partial_sha256_hash(self, enzoic, password_types):
+        sha256_hash = "5e88489"
+        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=sha256_hash, hash_type=password_types.SHA256_UNSALTED)
+        assert len(candidates) > 0
+        for candidate in candidates:
+            assert candidate.startswith(sha256_hash)
+
+    def test_get_candidates_by_partial_sha1_hash(self, enzoic, password_types):
+        sha1_hash = "5baa61e"
+        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=sha1_hash, hash_type=password_types.SHA256_UNSALTED)
+        assert len(candidates) > 0
+        for candidate in candidates:
+            assert candidate.startswith(sha1_hash)
+
+    def test_unsupported_partial_hash_type_provided(self, enzoic, password_types, enzoic_exceptions):
+        ntlm_hash = "8846f7e"
+        with pytest.raises(enzoic_exceptions.UnsupportedPasswordType) as exc_info:
+            enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.VBulletinPost3_8_5)
+            assert "Unsupported hash type provided." in str(exc_info.value)
+            assert password_types.NTLM in str(exc_info.value)
+            assert password_types.SHA1_UNSALTED in str(exc_info.value)
+            assert password_types.SHA256_UNSALTED in str(exc_info.value)
+            assert password_types.MD5_UNSALTED in str(exc_info.value)
+
+    def test_uncompromised_partial_hash_no_results(self, enzoic, password_types):
+        ntlm_hash = "z000000"
+        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.NTLM)
+        assert len(candidates) == 0
+
+    def test_partial_hash_too_short(self, enzoic, password_types):
+        ntlm_hash = "000000"
+        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.NTLM)
+        assert len(candidates) == 0
+
 
 class TestGetUserPasswords:
     def test_get_user_password(self, enzoic):

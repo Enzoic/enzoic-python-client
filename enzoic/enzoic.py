@@ -140,6 +140,11 @@ class Enzoic:
          NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively)
         :return: A list of potential matches for the first 7 characters of the hash provided
         """
+        if len(hashed_pw) < 7:
+            raise ValueError(
+                "Password hash must be greater than or equal to 7 characters in length."
+            )
+
         if hash_type == PasswordType.NTLM:
             key = "partialNTLM"
         elif hash_type == PasswordType.SHA256_UNSALTED:

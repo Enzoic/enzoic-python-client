@@ -126,6 +126,62 @@ class Enzoic:
         else:
             return False
 
+    def retrieve_list_of_candidates_for_partial_hash(self, hashed_pw: str, hash_type: int) -> list:
+        """
+        Pass in the type of password hash as well as the first 7 characters of that hash. Supports NTLM, MD5, SHA1,
+        SHA256 (33, 1, 2, 3 respectively). You can utilize the PasswordTypes enum for ease of use like so:
+
+        from enzoic.enums.password_types import PasswordType
+        PasswordType.NTLM
+
+        See: https://www.enzoic.com/docs/passwords-api
+        :param hashed_pw: The first 7 characters of the hash type you wish to check.
+        :param hash_type: The int of the respective password hash supplied, possible values are:
+         NTLM, MD5, SHA1, SHA256 (33, 1, 2, 3 respectively)
+        :return: A list of potential matches for the first 7 characters of the hash provided
+        """
+        if len(hashed_pw) < 7:
+            raise ValueError(
+                "Password hash must be greater than or equal to 7 characters in length."
+            )
+
+        if hash_type == PasswordType.NTLM:
+            key = "partialNTLM"
+        elif hash_type == PasswordType.SHA256_UNSALTED:
+            key = "partialSHA256"
+        elif hash_type == PasswordType.MD5_UNSALTED:
+            key = "partialMD5"
+        elif hash_type == PasswordType.SHA1_UNSALTED:
+            key = "partialSHA1"
+        else:
+            raise UnsupportedPasswordType(
+                "Unsupported hash type provided. The following values for 'password_type' are supported:"
+                f"\nNTLM: {PasswordType.NTLM}"
+                f"\nMD5: {PasswordType.MD5_UNSALTED}"
+                f"\nSHA1: {PasswordType.SHA1_UNSALTED}"
+                f"\nSHA256: {PasswordType.SHA256_UNSALTED}"
+            )
+
+        payload = {
+            key: hashed_pw[:7]
+        }
+
+        response = self._make_rest_call(
+            self.api_base_url + self.PASSWORDS_API_PATH, "POST", body=payload
+        )
+
+        if response.status_code != 404:
+            if hash_type == PasswordType.NTLM:
+                return [candidate["ntlm"] for candidate in response.json()["candidates"]]
+            elif hash_type == PasswordType.MD5_UNSALTED:
+                return [candidate["md5"] for candidate in response.json()["candidates"]]
+            elif hash_type == PasswordType.SHA1_UNSALTED:
+                return [candidate["sha1"] for candidate in response.json()["candidates"]]
+            elif hash_type == PasswordType.SHA256_UNSALTED:
+                return [candidate["sha256"] for candidate in response.json()["candidates"]]
+        else:
+            return []
+
     def check_password_ex(self, password: str) -> Tuple[bool, bool, None, int]:
         """
         Checks whether the provided password is in the Enzoic database of known, compromised passwords and returns the

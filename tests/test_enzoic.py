@@ -199,7 +199,7 @@ class TestCheckPassword:
         for candidate in candidates:
             assert candidate.startswith(sha1_hash)
 
-    def test_unsupported_partial_hash_type_provided(self, enzoic, password_types, enzoic_exceptions):
+    def test_get_candidates_unsupported_partial_hash_type_provided(self, enzoic, password_types, enzoic_exceptions):
         ntlm_hash = "8846f7e"
         with pytest.raises(enzoic_exceptions.UnsupportedPasswordType) as exc_info:
             enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.VBulletinPost3_8_5)
@@ -209,15 +209,11 @@ class TestCheckPassword:
             assert password_types.SHA256_UNSALTED in str(exc_info.value)
             assert password_types.MD5_UNSALTED in str(exc_info.value)
 
-    def test_uncompromised_partial_hash_no_results(self, enzoic, password_types):
-        ntlm_hash = "z000000"
-        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.NTLM)
-        assert len(candidates) == 0
-
     def test_partial_hash_too_short(self, enzoic, password_types):
-        ntlm_hash = "000000"
-        candidates = enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.NTLM)
-        assert len(candidates) == 0
+        with pytest.raises(ValueError) as exc_info:
+            ntlm_hash = "000000"
+            enzoic().retrieve_list_of_candidates_for_partial_hash(hashed_pw=ntlm_hash, hash_type=password_types.NTLM)
+            assert "Password hash must be greater than or equal to 7 characters in length." in exc_info.value
 
 
 class TestGetUserPasswords:

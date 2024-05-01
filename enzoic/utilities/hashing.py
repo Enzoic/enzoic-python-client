@@ -2,12 +2,12 @@ import hashlib
 import hmac
 import base64
 import re
-
 import argon2
 import bcrypt
 import zlib
 import passlib.hash
-import binascii
+import whirlpool
+from enzoic.utilities.md4 import MD4
 from enzoic.enums.password_types import PasswordType
 from enzoic.exceptions import UnsupportedPasswordType
 
@@ -80,15 +80,13 @@ def calc_scrypt_hash(password: str, salt: str):
 def calc_custom_algorithm_1_hash(password: str, salt: str) -> hex:
     to_whirlpool = salt + password
     to_sha = password + salt
-    # make these byte objects
+    # # make these byte objects
     sha512_out = hashlib.sha512(to_sha.encode("utf-8")).digest()
-    whirlpool_out = hashlib.new("whirlpool")
-    whirlpool_out.update(to_whirlpool.encode("utf-8"))
+    whirlpool_out = whirlpool.new(to_whirlpool.encode("utf-8"))
     whirlpool_out = whirlpool_out.digest()
     # xor byte objects
     hashed_pw = bytes(a ^ b for (a, b) in zip(sha512_out, whirlpool_out))
     return hashed_pw.hex()
-
 
 def calc_custom_algorithm_2_hash(password: str, salt: str) -> hex:
     hashed_pw = hashlib.md5(f"{password}{salt}".encode("utf-8")).hexdigest()
@@ -199,8 +197,7 @@ def calc_run_cms_smf1_1(password: str, salt: str) -> hex:
 
 
 def calc_ntlm_hash(password: str) -> hex:
-    hashed_pw = hashlib.new("md4", password.encode("utf-16le")).digest()
-    return binascii.hexlify(hashed_pw).decode("utf-8")
+    return MD4(password.encode("utf-16le")).hexdigest()
 
 
 def calc_sha1dash_hash(password: str, salt: str) -> hex:

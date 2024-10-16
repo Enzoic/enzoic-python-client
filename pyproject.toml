@@ -1,0 +1,37 @@
+[project]
+name = "enzoic-python-client"
+version = "2.0"
+description = "\"Enzoic python SDK\""
+authors = [
+    {name = "jkasser", email = "jeff@enzoic.com"},
+]
+dependencies = [
+    "argon2-cffi",
+    "bcrypt",
+    "zipp",
+    "passlib",
+    "pytest",
+    "requests",
+    "pytest-env",
+    "pytest-order",
+    "whirlpool @ git+git+https://github.com/oohlaf/python-whirlpool.git",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+[[tool.pdm.source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[tool.pdm.dev-dependencies]
+dev = []

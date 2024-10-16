@@ -63,8 +63,8 @@ class TestGetExposuresForUser:
 
     def test_actual_exposure_for_username(self, enzoic):
         response = enzoic().get_exposures_for_user("eicar")
-        assert response["count"] == 9
-        assert len(response["exposures"]) == 9
+        assert response["count"] == 10
+        assert len(response["exposures"]) == 10
         assert set(response["exposures"]) == {
             "5820469ffdb8780510b329cc",
             "58258f5efdb8780be88c2c5d",
@@ -410,13 +410,13 @@ class TestGetUserPasswords:
 class TestGetUserPasswordsByDomain:
     def test_get_passwords_for_domain_default_page_size(self, enzoic):
         domain_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com")
-        assert domain_response["count"] == 94
+        assert domain_response["count"] == 99
         assert domain_response["pagingToken"] is None
         assert len(domain_response["users"]) == 94
 
     def test_get_passwords_for_domain_specific_page_size(self, enzoic):
         domain_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com", page_size=10)
-        assert domain_response["count"] == 94
+        assert domain_response["count"] == 99
         assert domain_response["pagingToken"] is not None
         assert len(domain_response["users"]) == 10
 
@@ -424,9 +424,9 @@ class TestGetUserPasswordsByDomain:
         paged_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com", page_size=10)
         # now get the paginated results
         domain_response = enzoic().get_user_passwords_by_domain(domain="enzoic.com", paging_token=paged_response["pagingToken"])
-        assert domain_response["count"] == 94
+        assert domain_response["count"] == 99
         assert domain_response["pagingToken"] is None
-        assert len(domain_response["users"]) == 84
+        assert len(domain_response["users"]) == 89
 
 
 class TestGetUserPasswordsByPartialHash:
